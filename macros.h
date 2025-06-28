@@ -100,6 +100,30 @@
     #define TRACE_VOID_BLOCK(blockName, block) block()
 #endif
 
+#define SWIZZLE_METHOD(isClassMethod, origClass, origSel, swizzledClass, swizzledSel, originalImpVar) \
+do { \
+    Class targetClass = (isClassMethod ? object_getClass(origClass) : origClass); \
+    Method origMethod = class_getInstanceMethod(targetClass, origSel); \
+    Method swizzledMethod = class_getInstanceMethod(swizzledClass, swizzledSel); \
+    if (origMethod && swizzledMethod) { \
+        originalImpVar = (void *)method_getImplementation(origMethod); \
+        method_exchangeImplementations(origMethod, swizzledMethod); \
+        LOG_INFO(@"Swizzle Success: %@[%@ %@] -> [%@ %@]", \
+            isClassMethod ? @"+" : @"-", \
+            NSStringFromClass(targetClass), \
+            NSStringFromSelector(origSel), \
+            NSStringFromClass(swizzledClass), \
+            NSStringFromSelector(swizzledSel)); \
+    } else { \
+        LOG_ERROR(@"Swizzle Failed: %@[%@ %@] or [%@ %@] not found", \
+            isClassMethod ? @"+" : @"-", \
+            NSStringFromClass(targetClass), \
+            NSStringFromSelector(origSel), \
+            NSStringFromClass(swizzledClass), \
+            NSStringFromSelector(swizzledSel)); \
+    } \
+} while (0)
+
 
 #endif /* __OBJC__ */
 
